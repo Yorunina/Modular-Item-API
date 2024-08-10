@@ -1,17 +1,17 @@
 package smartin.miapi.modules.properties.mining.shape;
 
 import com.google.gson.JsonObject;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import smartin.miapi.modules.ItemModule;
 import smartin.miapi.modules.properties.mining.MiningShapeProperty;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class VeinMiningShape implements MiningShape {
     public int size = 5;
@@ -43,21 +43,24 @@ public class VeinMiningShape implements MiningShape {
             BlockPos currentPos = queue.poll();
             miningBlocks.add(currentPos);
 
-            for (Direction direction : Direction.values()) {
-                BlockPos neighborPos = currentPos.offset(direction);
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    for (int y = -1; y <= 1; y++) {
+                        BlockPos neighborPos = currentPos.add(x, y, z);
+                        // Check if neighbor position is within the size limit and hasn't been visited
+                        int dx1 = neighborPos.getX() - pos.getX() + size;
+                        int dy1 = neighborPos.getY() - pos.getY() + size;
+                        int dz1 = neighborPos.getZ() - pos.getZ() + size;
+                        if (Math.abs(dx1 - size) <= size && Math.abs(dy1 - size) <= size && Math.abs(dz1 - size) <= size
+                                && !visited.contains(neighborPos)) {
 
-                // Check if neighbor position is within the size limit and hasn't been visited
-                int dx1 = neighborPos.getX() - pos.getX() + size;
-                int dy1 = neighborPos.getY() - pos.getY() + size;
-                int dz1 = neighborPos.getZ() - pos.getZ() + size;
-                if (Math.abs(dx1 - size) <= size && Math.abs(dy1 - size) <= size && Math.abs(dz1 - size) <= size
-                        && !visited.contains(neighborPos)) {
+                            visited.add(neighborPos);
 
-                    visited.add(neighborPos);
-
-                    BlockState neighborState = world.getBlockState(neighborPos);
-                    if (neighborState.getBlock().equals(centerState.getBlock())) {
-                        queue.add(neighborPos);
+                            BlockState neighborState = world.getBlockState(neighborPos);
+                            if (neighborState.getBlock().equals(centerState.getBlock())) {
+                                queue.add(neighborPos);
+                            }
+                        }
                     }
                 }
             }
